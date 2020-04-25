@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Shortcuts QR</title>
+
+<link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/vuetify@2.2.24/dist/vuetify.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vuetify@2.2.24/dist/vuetify.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue-qriously@1.1.1/dist/vue-qriously.min.js"></script>
+
+<style>
+  #app {
+    margin: 0 auto;
+    width: 480px;
+  }
+
+  .qr-code canvas {
+    display: block;
+    margin: auto;
+  }
+</style>
+</head>
+
+<body>
+
+<div id="app">
+  <v-app>
+    <v-container  class="font-weight-bold">
+      <v-row align="center" justify="center">
+        <v-col cols="8">
+          <p class="text-center display-2 font-weight-black">Shortcuts QR</p>
+        </v-col>
+      </v-row>
+      <v-row justify="center">
+        <v-col cols="12">
+          <v-textarea v-if="multiline" v-model="input" :hint="shceme" persistent-hint clearable autofocus></v-textarea>
+          <v-text-field v-else v-model="input" :hint="shceme" persistent-hint clearable autofocus></v-text-field>
+        </v-col>
+      </v-row>
+      <v-row justify="center"><v-col cols="12">
+        <qriously :value="shceme" :size="480" class="qr-code"></qriously>
+      </v-col></v-row>
+      <v-row align="center" justify="end">
+        <v-col>
+          <v-checkbox v-model="multiline" label="Multiline"></v-checkbox>
+        </v-col>
+        <v-col>
+          <v-checkbox v-model="raw" label="Raw"></v-checkbox>
+        </v-col>
+        <v-col>
+          <v-chip @click="getShortcut()">Get Shortcut</v-chip>
+        </v-col>
+      </v-row>
+    </v-container>
+    <v-snackbar v-model="snack.on" top>
+      {{ snack.message }}
+      <v-btn text  @click="snack.on = false">Close</v-btn>
+    </v-snackbar>
+  </v-app>
+</div>
+
+<script>
+  SHORTCUT_URL = 'https://www.icloud.com/shortcuts/194238313ffb4598952f022532b148cb'
+  DEFAULT_SHORTCUT_NAME = 'ShortcutsQR'
+
+  Vue.use(window['vue-qriously'])
+  const app = new Vue({
+    el: '#app',
+    vuetify: new Vuetify(),
+    data: {
+      input: '',
+      raw: false,
+      multiline: false,
+      snack: {
+        on: false,
+        message: '',
+      }
+    },
+    computed: {
+      shceme: function () {
+        if (this.raw) {
+          return this.input
+        } else {
+          const input = encodeURIComponent(this.input)
+          const template = `shortcuts://run-shortcut?name=${this.shortcutName}&input=${input}`
+          return template
+        }
+      },
+      shortcutName: function() {
+        return this.queries().shortcut_name || DEFAULT_SHORTCUT_NAME
+      }
+    },
+    methods: {
+      getShortcut: function() {
+        this.raw = true
+        this.input = SHORTCUT_URL
+        this.snack.on = true
+        this.snack.message = 'Scan QR code to add shortcut to your iPhone.'
+      },
+      queries: function() {
+        const ret = {}
+        location.search.slice(1).split('&').forEach(qs => {
+          const [k, v] = qs.split('=')
+          if (k) {
+            ret[decodeURIComponent(k)] = decodeURIComponent(v) || null
+          }
+        })
+        return ret
+      }
+    }
+  })
+</script>
+
+</body>
+</html>
