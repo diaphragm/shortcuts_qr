@@ -41,9 +41,12 @@
         </v-col>
       </v-row>
       <v-row justify="center"><v-col cols="12">
-        <qriously :value="shceme" :size="480" class="qr-code"></qriously>
+        <qriously :value="shceme" :size="456" class="qr-code"></qriously>
       </v-col></v-row>
-      <v-row align="center" justify="end">
+      <v-row align="baseline" justify="end">
+        <v-col>
+          <v-text-field v-model="shortcutName" label="Shortcut Name" dense></v-checkbox>
+        </v-col>
         <v-col>
           <v-checkbox v-model="multiline" label="Multiline"></v-checkbox>
         </v-col>
@@ -51,7 +54,7 @@
           <v-checkbox v-model="raw" label="Raw"></v-checkbox>
         </v-col>
         <v-col>
-          <v-chip @click="getShortcut()">Get Shortcut</v-chip>
+          <v-chip @click="generateIphoneQR()">Get Shortcut</v-chip>
         </v-col>
       </v-row>
     </v-container>
@@ -71,30 +74,35 @@
     el: '#app',
     vuetify: new Vuetify(),
     data: {
-      input: '',
+      input: undefined,
       raw: false,
       multiline: false,
+      shortcutName: undefined,
       snack: {
         on: false,
         message: '',
       }
     },
+    mounted: function() {
+      const queries = this.queries()
+      this.input = queries.input || ''
+      this.raw = Boolean(queries.raw)
+      this.multiline = Boolean(queries.multiline)
+      this.shortcutName = queries.shortcut_name || DEFAULT_SHORTCUT_NAME
+    },
     computed: {
       shceme: function () {
         if (this.raw) {
-          return this.input
+          return this.input || ''
         } else {
-          const input = encodeURIComponent(this.input)
+          const input = encodeURIComponent(this.input || '')
           const template = `shortcuts://run-shortcut?name=${this.shortcutName}&input=${input}`
           return template
         }
-      },
-      shortcutName: function() {
-        return this.queries().shortcut_name || DEFAULT_SHORTCUT_NAME
       }
     },
     methods: {
-      getShortcut: function() {
+      generateIphoneQR: function() {
         this.raw = true
         this.input = SHORTCUT_URL
         this.snack.on = true
